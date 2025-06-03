@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type Todo = {
   id: number;
@@ -13,22 +14,29 @@ type TodoStore = {
   toggleTodo: (id: number) => void;
 };
 
-const useTodoStore = create<TodoStore>((set) => ({
-  todos: [],
-  addTodo: (text) =>
-    set((state) => ({
-      todos: [...state.todos, { text, completed: false, id: Date.now() }],
-    })),
-  removeTodo: (id) =>
-    set((state) => ({
-      todos: state.todos.filter((task) => task.id !== id),
-    })),
-  toggleTodo: (id) =>
-    set((state) => ({
-      todos: state.todos.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      ),
-    })),
-}));
+const useTodoStore = create<TodoStore>()(
+  persist(
+    (set) => ({
+      todos: [],
+      addTodo: (text) =>
+        set((state) => ({
+          todos: [...state.todos, { id: Date.now(), text, completed: false }],
+        })),
+      removeTodo: (id) =>
+        set((state) => ({
+          todos: state.todos.filter((todo) => todo.id !== id),
+        })),
+      toggleTodo: (id) =>
+        set((state) => ({
+          todos: state.todos.map((todo) =>
+            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+          ),
+        })),
+    }),
+    {
+      name: "todo-storage",
+    }
+  )
+);
 
 export default useTodoStore;
